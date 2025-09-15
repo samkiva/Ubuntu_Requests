@@ -1,29 +1,50 @@
 import requests
-from PIL import Image
-from io import BytesIO
+import os
+from urllib.parse import urlparse
 
-def fetch_and_show_image(url):
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/128.0.0.0 Safari/537.36"
-        )
-    }
-
+def main():
+    print("🌍 Welcome to the Ubuntu Image Fetcher")
+    print("✨ 'I am because we are' – Collecting shared beauty from the web ✨\n")
+    
+    # Ask the user for the image URL
+    url = input("🔗 Please enter the image URL: ").strip()
+    
     try:
-        response = requests.get(url, headers=headers)
+        # Ensure Fetched_Images directory exists
+        os.makedirs("Fetched_Images", exist_ok=True)
+        
+        # Fetch image with requests
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Handle bad HTTP codes
 
-        if response.status_code == 200:
-            img = Image.open(BytesIO(response.content))
-            img.show()  # Opens in default image viewer
-            print("✅ Image fetched and displayed successfully.")
-        else:
-            print(f"❌ HTTP Error: {response.status_code}")
+        # Parse filename from URL
+        parsed_url = urlparse(url)
+        filename = os.path.basename(parsed_url.path)
 
+        # If filename is missing, create one
+        if not filename:
+            filename = "ubuntu_image.jpg"
+        
+        # Build file path
+        filepath = os.path.join("Fetched_Images", filename)
+        
+        # Save in binary mode
+        with open(filepath, "wb") as f:
+            f.write(response.content)
+
+        # Success messages
+        print(f"✅ Success: {filename} fetched from the community")
+        print(f"📂 Saved mindfully at: {filepath}")
+        print("\n🤝 Connection made. Community enriched. - HexSentiel")
+    
+    except requests.exceptions.HTTPError as e:
+        print(f"❌ HTTP Error: {e.response.status_code} - Respectfully handled.")
+    except requests.exceptions.Timeout:
+        print("⏳ Connection timed out. Please try again later.")
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Request failed: {e}")
+        print(f"⚠️ Connection issue: {e}")
+    except Exception as e:
+        print(f"🚨 Unexpected error: {e}")
 
 if __name__ == "__main__":
-    url = input("🔗 Please enter the image URL: ").strip()
-    fetch_and_show_image(url)
+    main()
